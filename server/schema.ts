@@ -5,20 +5,21 @@ import {
   text,
   primaryKey,
   integer,
-} from "drizzle-orm/pg-core"
-import type { AdapterAccount} from "next-auth/adapters"
- 
+} from "drizzle-orm/pg-core";
+import type { AdapterAccount } from "next-auth/adapters";
+import { createId } from "@paralleldrive/cuid2";
 
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => createId()),
   name: text("name"),
   email: text("email").unique(),
+  password: text("password"),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-})
- 
+});
+
 export const accounts = pgTable(
   "account",
   {
@@ -43,7 +44,18 @@ export const accounts = pgTable(
       }),
     },
   ]
-)
- 
+);
 
 
+export const emailVerificationToken = pgTable("email_verification_token",
+  {
+    id:text("id")
+      .notNull()
+      .$defaultFn(() => createId()),
+    token:text("token").notNull(),
+    expires:timestamp("expires", { mode: "date" }).notNull(),
+    email:text("email").notNull(),
+  } ,
+(vt)=>({
+  compundKey:primaryKey({columns:[vt.id,vt.token]}),
+}))
